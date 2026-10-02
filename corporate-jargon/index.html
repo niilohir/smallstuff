@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corporate Jargon Translator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html"><span class="logo">in</span><h1>Jargonator — Plain English → LinkedIn</h1></a>
+    <nav class="topnav"><a href="index.html" class="active">Categories</a><a href="translator.html">🤖 Translator</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h2>Say less. Mean nothing. Sound important.</h2>
+      <p>Pick a category to see everyday phrases translated into premium corporate jargon.</p>
+    </section>
+
+    <section class="spotlight" id="spotlight">
+      <div class="plain" id="sp-plain"></div>
+      <div class="corp" id="sp-corp"></div>
+      <button id="sp-next">🔀 Random translation</button>
+    </section>
+
+    <a class="translator-cta" href="translator.html">
+      <div><h3>🤖 Live Jargon Translator</h3><p>Type any sentence and watch it become thought leadership in real time.</p></div>
+      <span class="go">Open translator →</span>
+    </a>
+
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <script src="data.js"></script>
+  <script>
+    const grid = document.getElementById("grid");
+    CATEGORIES.forEach(c => {
+      const a = document.createElement("a");
+      a.className = "cat-card";
+      a.href = "category.html?c=" + c.id;
+      a.innerHTML = `<div class="emoji">${c.emoji}</div><h3>${c.name}</h3><p>${c.blurb}</p><div class="count">${c.entries.length} translations →</div>`;
+      grid.appendChild(a);
+    });
+
+    const all = CATEGORIES.flatMap(c => c.entries);
+    function spin() {
+      const [p, j] = all[Math.floor(Math.random() * all.length)];
+      document.getElementById("sp-plain").textContent = `"${p}"`;
+      document.getElementById("sp-corp").textContent = `“${j}”`;
+    }
+    document.getElementById("sp-next").onclick = spin;
+    spin();
+  </script>
+</body>
+</html>

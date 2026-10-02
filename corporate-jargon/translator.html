@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Translator — Jargonator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html"><span class="logo">in</span><h1>Jargonator — Plain English → LinkedIn</h1></a>
+    <nav class="topnav"><a href="index.html">Categories</a><a href="translator.html" class="active">🤖 Translator</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h2>🤖 Live Jargon Translator</h2>
+      <p>Type anything. Known phrases use their exact translation, and everything else gets swapped word by word.</p>
+    </section>
+
+    <div class="levels" id="levels">
+      <button data-level="1">🧑‍🎓 Intern</button>
+      <button data-level="2">👔 Middle Manager</button>
+      <button data-level="3">🚀 LinkedIn Influencer</button>
+    </div>
+
+    <div class="translator">
+      <div class="pane">
+        <label for="input">Plain English</label>
+        <textarea id="input" placeholder="e.g. my assignment is late" autofocus></textarea>
+      </div>
+      <div class="pane">
+        <label>Corporate</label>
+        <div id="output" class="output"><span class="placeholder">Your thought leadership will appear here…</span></div>
+      </div>
+    </div>
+
+    <div class="tr-actions">
+      <span id="status" class="status"></span>
+      <button class="ghost" id="reroll">🔀 Re-roll</button>
+      <button class="ghost" id="clear">Clear</button>
+      <button id="copy">Copy</button>
+    </div>
+
+    <h3 class="examples-title">Try one</h3>
+    <div class="chips" id="chips"></div>
+    <p class="dict-size" id="dict-size"></p>
+  </main>
+  <div class="toast" id="toast">Copied to clipboard. Ready to post 🚀</div>
+
+  <script src="data.js"></script>
+  <script src="translator-engine.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    const input = $("input"), output = $("output"), status = $("status");
+    let seed = 1, level = 2;
+    try { level = +localStorage.getItem("jargon-level") || 2; } catch (e) {}
+
+    function run() {
+      const text = input.value;
+      if (!text.trim()) {
+        output.innerHTML = '<span class="placeholder">Your thought leadership will appear here…</span>';
+        status.textContent = "";
+        return;
+      }
+      const r = translate(text, level, seed);
+      output.textContent = r.text;
+      if (r.exactMatches.length && r.exactMatches.length === r.sentences) {
+        status.textContent = `✅ Exact match from ${[...new Set(r.exactMatches)].join(", ")}`;
+      } else {
+        const parts = [`🔁 ${r.swaps} swap${r.swaps === 1 ? "" : "s"}`];
+        if (r.exactMatches.length) parts.push(`✅ ${r.exactMatches.length} exact sentence${r.exactMatches.length === 1 ? "" : "s"}`);
+        status.textContent = parts.join(" · ");
+      }
+    }
+
+    function setLevel(l) {
+      level = l;
+      document.querySelectorAll("#levels button").forEach(b => b.classList.toggle("active", +b.dataset.level === l));
+      try { localStorage.setItem("jargon-level", l); } catch (e) {}
+      run();
+    }
+    document.querySelectorAll("#levels button").forEach(b => b.onclick = () => setLevel(+b.dataset.level));
+
+    input.addEventListener("input", run);
+    $("reroll").onclick = () => { seed++; run(); };
+    $("clear").onclick = () => { input.value = ""; run(); input.focus(); };
+    $("copy").onclick = () => {
+      if (!input.value.trim()) return;
+      navigator.clipboard?.writeText(output.textContent);
+      $("toast").classList.add("show");
+      setTimeout(() => $("toast").classList.remove("show"), 1500);
+    };
+
+    const EXAMPLES = [
+      "my assignment is late", "its broken", "I dont know how to fix this", "can you help me with my homework",
+      "I ate pizza and watched tv all weekend", "my boss said the project is a problem",
+      "I think the test was really hard but I studied a lot", "The cat ate my essay so I need an extension.",
+      "I want to quit my job", "we lost the game but it was fun", "honestly i forgot my phone at home lol",
+      "I have to go home now. See you tomorrow!",
+    ];
+    EXAMPLES.forEach(ex => {
+      const c = document.createElement("button");
+      c.className = "chip";
+      c.textContent = ex;
+      c.onclick = () => { input.value = ex; run(); };
+      $("chips").appendChild(c);
+    });
+    $("dict-size").textContent =
+      `Dictionary: ${DICTIONARY_SIZE.exact} exact sentences · ${DICTIONARY_SIZE.swaps} swappable words & phrases`;
+
+    setLevel(level);
+  </script>
+</body>
+</html>

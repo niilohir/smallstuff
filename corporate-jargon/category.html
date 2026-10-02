@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Category — Jargonator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html"><span class="logo">in</span><h1>Jargonator — Plain English → LinkedIn</h1></a>
+    <nav class="topnav"><a href="index.html">Categories</a><a href="translator.html">🤖 Translator</a></nav>
+  </header>
+  <main>
+    <nav class="tabs" id="tabs"></nav>
+    <section class="hero">
+      <h2 id="title"></h2>
+      <p id="blurb"></p>
+    </section>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search this category…">
+      <button class="ghost" id="random">🎲 Random</button>
+    </div>
+    <div id="list"></div>
+  </main>
+  <div class="toast" id="toast">Copied to clipboard — ready to post 🚀</div>
+
+  <script src="data.js"></script>
+  <script>
+    const id = new URLSearchParams(location.search).get("c");
+    const cat = CATEGORIES.find(c => c.id === id) || CATEGORIES[0];
+    document.title = `${cat.name} — Jargonator`;
+    document.getElementById("title").textContent = `${cat.emoji} ${cat.name}`;
+    document.getElementById("blurb").textContent = cat.blurb;
+
+    const tabs = document.getElementById("tabs");
+    CATEGORIES.forEach(c => {
+      const a = document.createElement("a");
+      a.href = "category.html?c=" + c.id;
+      a.textContent = `${c.emoji} ${c.name}`;
+      if (c.id === cat.id) a.className = "active";
+      tabs.appendChild(a);
+    });
+
+    const list = document.getElementById("list");
+    const toast = document.getElementById("toast");
+    function render(filter = "") {
+      const q = filter.toLowerCase();
+      list.innerHTML = "";
+      const items = cat.entries.filter(([p, j]) => (p + " " + j).toLowerCase().includes(q));
+      if (!items.length) { list.innerHTML = `<div class="empty">No results. Let's circle back on that search.</div>`; return; }
+      items.forEach(([p, j]) => {
+        const row = document.createElement("div");
+        row.className = "entry";
+        row.innerHTML = `<div class="plain"></div><div class="arrow">→</div><div class="corp"></div><button>Copy</button>`;
+        row.querySelector(".plain").textContent = p;
+        row.querySelector(".corp").textContent = j;
+        row.querySelector("button").onclick = () => {
+          navigator.clipboard?.writeText(j);
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 1500);
+        };
+        list.appendChild(row);
+      });
+    }
+    document.getElementById("search").oninput = e => render(e.target.value);
+    document.getElementById("random").onclick = () => {
+      document.getElementById("search").value = "";
+      render();
+      const rows = list.querySelectorAll(".entry");
+      rows.forEach(r => r.classList.remove("highlight"));
+      const r = rows[Math.floor(Math.random() * rows.length)];
+      r.classList.add("highlight");
+      r.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    render();
+  </script>
+</body>
+</html>
